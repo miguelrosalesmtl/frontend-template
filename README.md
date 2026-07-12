@@ -1,5 +1,7 @@
 # frontend-template-react
 
+[![CI](https://github.com/miguelrosalesmtl/frontend-template/actions/workflows/ci.yml/badge.svg)](https://github.com/miguelrosalesmtl/frontend-template/actions/workflows/ci.yml)
+
 A production-ready React + Vite starter to scaffold new applications from.
 
 It is built around one idea: **components are dumb**. They receive props and emit
@@ -178,6 +180,39 @@ features/users/
     UserList.test.tsx     renders with no providers at all
   UsersPage.test.tsx      exercises the full slice through MSW
 ```
+
+## Contributing / CI
+
+`main` is protected. Work happens on a branch and lands through a pull request:
+
+```bash
+git checkout -b feat/thing
+# ...
+git push -u origin feat/thing
+gh pr create
+```
+
+Two checks must pass before a PR can merge:
+
+| Check     | What it runs                                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------------------------- |
+| `quality` | lint (**architectural boundaries**), typecheck, unit tests, app build, Storybook build, `prettier --check`     |
+| `e2e`     | 6 Playwright tests in real Chromium — config fetch, Zod validation, MSW startup, render, delete, error + retry |
+
+The `lint` step is the load-bearing one. If a presentational component imports the API
+client or the store, if a source file lands in an unclassified directory, or if someone
+reads a custom `import.meta.env` var, the job fails and **GitHub refuses the merge** —
+`the base branch policy prohibits the merge`. That is what makes the architecture in this
+template a property of the repository rather than a note in a README.
+
+Run the whole pipeline locally before pushing:
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm test:e2e
+```
+
+Node and pnpm versions come from `.nvmrc` and `packageManager`, so CI, the Dockerfile,
+and your laptop cannot drift apart.
 
 ## Configuration
 

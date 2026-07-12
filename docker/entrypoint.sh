@@ -15,12 +15,12 @@ set -eu
 
 CONFIG_PATH=/usr/share/nginx/html/config.json
 
+# Mocking is hard-coded false: a deployed container must never serve fixtures.
 cat > "$CONFIG_PATH" <<EOF
 {
   "apiUrl": "${APP_API_URL}",
   "environment": "${APP_ENVIRONMENT}",
-  "enableMocking": false,
-  "sentryDsn": "${APP_SENTRY_DSN:-}"
+  "enableMocking": false
 }
 EOF
 

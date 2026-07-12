@@ -1,5 +1,0 @@
-{
-  "apiUrl": "/api",
-  "environment": "development",
-  "enableMocking": true
-}

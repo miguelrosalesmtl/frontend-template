@@ -8,6 +8,13 @@ import { z } from 'zod'
  * validated against the schema below, so the artifact you tested in staging is
  * byte-for-byte the artifact that reaches production.
  *
+ * Where /config.json comes from:
+ *   - locally      `vite/runtime-config.ts` generates it from `.env`
+ *   - in a container  `docker/entrypoint.sh` writes it from env vars at startup
+ *
+ * Both use the same `APP_*` variable names, and both produce the same file, so
+ * local development boots exactly the way production does.
+ *
  * Two consequences worth remembering:
  *
  *  1. Everything here is PUBLIC. It is served to the browser as plain JSON.
@@ -20,14 +27,15 @@ const configSchema = z.object({
   /** Base URL of the API. Relative ("/api") or absolute ("https://api.example.com"). */
   apiUrl: z.string().min(1),
 
-  /** Which environment this deployment is. Drives logging, analytics, banners. */
+  /** Which deployment this is. Drives the environment banner (see AppLayout). */
   environment: z.enum(['development', 'staging', 'production']),
 
-  /** Serve the app from MSW fixtures instead of a real backend. Dev only. */
+  /**
+   * Serve the app from MSW fixtures instead of a real backend, so it runs with
+   * no server at all. Also gated by `import.meta.env.DEV`, so it cannot activate
+   * in a production build even if this is set to true.
+   */
   enableMocking: z.boolean().default(false),
-
-  /** Optional error-reporting sink. */
-  sentryDsn: z.string().optional(),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

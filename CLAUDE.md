@@ -33,14 +33,21 @@ should be resolved domain data, nothing else.
 
 ## Configuration
 
+Configure locally with **`.env`** (copy `.env.example`). It is NOT read by the app directly:
+`vite/runtime-config.ts` generates `public/config.json` from it, and the app fetches and
+Zod-validates that at boot — the same path `docker/entrypoint.sh` drives in production. Both
+use the same `APP_*` names.
+
+`public/config.json` is GENERATED. Do not edit or commit it; edit `.env`.
+
 Built once, promoted across environments. **Never** read custom `import.meta.env.VITE_*` vars —
 they are frozen into the bundle at build time, which defeats the whole model, and ESLint blocks
-it. Use `getConfig()` from `@/config/env`, validated from `/config.json` at boot.
+it. Use `getConfig()` from `@/config/env`.
 
 Everything in `config.json` is public and served to the browser. Never put a secret there.
 
-To add a config field: extend the Zod schema in `src/config/env.ts`, add it to
-`public/config.json` and `config.example.json`, and emit it from `docker/entrypoint.sh`.
+To add a config field, touch four places: the Zod schema in `src/config/env.ts`, the generator
+in `vite/runtime-config.ts`, `.env.example`, and `docker/entrypoint.sh`.
 
 ## Adding a feature
 

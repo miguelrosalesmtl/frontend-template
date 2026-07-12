@@ -9,3 +9,10 @@ test-results
 
 # Personal overrides (Vite serves public/ as-is; keep secrets out of it entirely)
 public/config.local.json
+
+# Local env. Generated into public/config.json by vite/runtime-config.ts
+.env
+public/config.json
+
+# Local agent/editor state
+.claude/

@@ -21,8 +21,8 @@ export function UsersPage() {
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
         <p className="text-muted-foreground text-sm">
-          Served by MSW. Point <code>apiUrl</code> in <code>public/config.json</code> at a real
-          backend and set <code>enableMocking</code> to <code>false</code>.
+          Served by MSW fixtures. To hit a real backend, set <code>APP_API_URL</code> and{' '}
+          <code>APP_ENABLE_MOCKING=false</code> in <code>.env</code>.
         </p>
       </header>
 

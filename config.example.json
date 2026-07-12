@@ -1,6 +1,5 @@
 {
   "apiUrl": "https://api.example.com",
   "environment": "production",
-  "enableMocking": false,
-  "sentryDsn": ""
+  "enableMocking": false
 }

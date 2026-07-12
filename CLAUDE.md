@@ -115,3 +115,16 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e
 ```
 
 `pnpm lint` is not optional — it is what enforces the architecture.
+
+## Git workflow
+
+`main` is protected. Never commit to it directly — it will be rejected. Branch, push, open
+a PR:
+
+```bash
+git checkout -b feat/thing && git push -u origin feat/thing && gh pr create
+```
+
+The `quality` and `e2e` checks must pass before a PR can merge. `quality` runs the lint
+step that enforces the boundary matrix, so an architecture violation genuinely cannot land
+on `main` — GitHub refuses the merge.

@@ -75,6 +75,10 @@ pnpm test:e2e:ui    # Playwright time-travel debugger
 pnpm lint           # includes architectural boundary enforcement
 pnpm typecheck
 pnpm build
+
+pnpm docker:build   # production image (nginx, config injected at startup)
+pnpm docker:run     # serve it on :8080
+pnpm docker:staging # same image as staging (:8081) — see compose.yaml
 ```
 
 ## The component library
@@ -225,26 +229,58 @@ just send the app hunting for fixtures that are never served.
 
 ### Deploying
 
-The Docker image contains no configuration. `docker/entrypoint.sh` writes `config.json`
-from the container's environment at startup, so the same image is a staging container or
-a production one depending only on how you run it:
+The app ships as a **static bundle served by nginx**, in a multi-stage image that builds
+with Node and throws the toolchain away:
 
 ```bash
-docker build -t myapp .
-
-docker run -p 8080:8080 \
-  -e APP_API_URL="https://staging-api.example.com" \
-  -e APP_ENVIRONMENT="staging" \
-  myapp
+pnpm docker:build      # build the production image
+pnpm docker:run        # serve it on http://localhost:8080
 ```
 
-Note these are the **same variable names** you use in `.env` locally — one vocabulary from
-your laptop to production. `APP_API_URL` and `APP_ENVIRONMENT` are required; the container
-refuses to start without them rather than serving a broken app.
+`pnpm docker:run` takes `APP_API_URL` and `APP_ENVIRONMENT` from your shell:
 
-`config.json` is served `no-store`; hashed assets are served `immutable`. Do not cache
-`config.json` at a CDN, or a promoted container will hand out the previous environment's
-config.
+```bash
+APP_API_URL=https://api.example.com APP_ENVIRONMENT=production pnpm docker:run
+```
+
+**The image contains no configuration at all.** `docker/entrypoint.sh` writes `config.json`
+from the container's environment when it starts, so the same image is a staging container
+or a production one depending only on how you run it. Those are the _same_ `APP_*` variable
+names you use in `.env` locally — one vocabulary from laptop to production.
+
+`compose.yaml` makes that concrete by running the same image as two environments at once:
+
+```bash
+pnpm docker:staging      # http://localhost:8081
+pnpm docker:production   # http://localhost:8082
+pnpm docker:stop
+```
+
+Bring both up and you can verify the central claim yourself — the JavaScript bundle is
+byte-identical across the two, and only `config.json` differs:
+
+```bash
+curl -s localhost:8081/config.json   # staging-api.example.com
+curl -s localhost:8082/config.json   # api.example.com
+```
+
+`APP_API_URL` and `APP_ENVIRONMENT` are required; the container refuses to start without
+them rather than serving a broken app. `config.json` is served `no-store` and hashed assets
+`immutable` — do not cache `config.json` at a CDN, or a promoted container will hand out the
+previous environment's config.
+
+> The `docker:*` scripts resolve **Docker or Podman**, whichever you have installed.
+
+### Adding a config field
+
+Four places, e.g. to add a Sentry DSN later:
+
+1. `src/config/env.ts` — add it to the Zod schema (this makes it typed and validated)
+2. `vite/runtime-config.ts` — read it from `.env` for local development
+3. `.env.example` — document it
+4. `docker/entrypoint.sh` — emit it from a container env var
+
+Then read it with `getConfig()`. Remember it will be public.
 
 ## Mock API
 

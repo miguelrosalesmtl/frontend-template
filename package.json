@@ -18,7 +18,12 @@
     "test:e2e:report": "playwright show-report",
     "components": "node scripts/list-components.mjs",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "docker:build": "node scripts/container.mjs build -t frontend-template .",
+    "docker:run": "node scripts/container.mjs run --rm -p 8080:8080 -e APP_API_URL=${APP_API_URL:-/api} -e APP_ENVIRONMENT=${APP_ENVIRONMENT:-production} --name frontend-template frontend-template",
+    "docker:staging": "node scripts/container.mjs compose up --build app-staging",
+    "docker:production": "node scripts/container.mjs compose up --build app-production",
+    "docker:stop": "node scripts/container.mjs compose down"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

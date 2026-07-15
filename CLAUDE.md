@@ -31,6 +31,33 @@ The container handles `isPending` / `isError` and only renders the presentationa
 once data has resolved. Do not add `loading` or `error` props to a dumb component — its props
 should be resolved domain data, nothing else.
 
+## Where business logic lives
+
+There is **no `services/` layer** and there is no shared `hooks/` bucket. Business logic
+is placed by _what kind_ it is, not collected in one folder:
+
+- **Server-state logic** (fetching, mutations, cache invalidation, retries) →
+  `src/features/<name>/hooks/`, the **`hook`** layer. This is the closest analog to a
+  `services` layer: it is the only bridge from the UI down to `api` and `store`. See
+  `useUsers.ts`.
+- **Pure computation** (no I/O, no React — `calculateTotal`, `canUserEdit`, formatting) →
+  `src/lib/`. Importable from anywhere, testable without providers. Do **not** wrap a pure
+  function in a hook just to give it a home.
+- **Screen coordination** (loading/error branching, wiring a callback to a mutation) →
+  the container `<Name>Page.tsx`.
+- **Client-only state** (theme, sidebar — never came from the server) → `src/store/`.
+
+Two constraints the boundary matrix enforces, so keep them in mind:
+
+- **`src/hooks/` is NOT for business logic.** It is the `ui-hook` layer (shadcn's
+  `use-mobile`) and cannot import `api` or `store`. Feature hooks go in
+  `src/features/*/hooks/`.
+- **A hook may not import another hook** (the `hook` allow-list has no `hook`). So feature
+  hooks cannot reuse each other. If two features genuinely need the _same_ server-state
+  hook, that is the signal to add a dedicated shared-hook layer to `eslint.config.js` — a
+  new element type + policy. Do this only when a real second consumer appears, not
+  preemptively.
+
 ## Configuration
 
 Configure locally with **`.env`** (copy `.env.example`). It is NOT read by the app directly:
@@ -111,10 +138,13 @@ to steer the mock API instead.
 ## Before you finish
 
 ```bash
-pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e
+pnpm lint && pnpm check:cycles && pnpm typecheck && pnpm test && pnpm test:e2e
 ```
 
-`pnpm lint` is not optional — it is what enforces the architecture.
+`pnpm lint` is not optional — it is what enforces the architecture. `pnpm check:cycles`
+(dpdm) fails on any circular import: the boundary matrix bans cross-_layer_ imports but
+cannot see a cycle between two files in the _same_ layer, so this closes that gap. Both run
+in CI's `quality` job.
 
 ## Git workflow
 

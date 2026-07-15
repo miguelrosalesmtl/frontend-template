@@ -39,6 +39,12 @@ jobs:
       - name: Lint (includes architectural boundaries)
         run: pnpm lint
 
+      # The boundary matrix bans cross-layer imports, but not a cycle between two
+      # files in the SAME layer. dpdm walks the real module graph (tsconfig paths
+      # included) and fails on any circular import.
+      - name: Check for circular dependencies
+        run: pnpm check:cycles
+
       - name: Typecheck
         run: pnpm typecheck
 

@@ -17,6 +17,8 @@ api -> hook -> feature (container) -> component -> ui
 
 - `src/api` — transport only. Returns typed DTOs. Knows nothing about React.
 - `src/features/*/hooks` — TanStack Query hooks. The **only** bridge from UI to `api`.
+- `src/shared/hooks` — the same, but for data hooks shared by more than one feature.
+  Feature-agnostic: reaches `api`/`store` but never imports a `feature` or a feature `hook`.
 - `src/features/*/<Name>Page.tsx` — container. The only file that may pair data with presentation.
 - `src/components/**` — pure. Props in, callbacks out.
 - `src/types` — pure types, zero runtime. Importable from anywhere. Use this when a component
@@ -52,11 +54,13 @@ Two constraints the boundary matrix enforces, so keep them in mind:
 - **`src/hooks/` is NOT for business logic.** It is the `ui-hook` layer (shadcn's
   `use-mobile`) and cannot import `api` or `store`. Feature hooks go in
   `src/features/*/hooks/`.
-- **A hook may not import another hook** (the `hook` allow-list has no `hook`). So feature
-  hooks cannot reuse each other. If two features genuinely need the _same_ server-state
-  hook, that is the signal to add a dedicated shared-hook layer to `eslint.config.js` — a
-  new element type + policy. Do this only when a real second consumer appears, not
-  preemptively.
+- **A feature hook may not import another feature's hook** (the `hook` allow-list has no
+  `hook`). When two features genuinely need the _same_ server-state hook, lift it into the
+  **`shared-hook`** layer at `src/shared/hooks/` — a cross-feature data hook with the same
+  reach as a feature hook (`api`, `store`, `lib`). It is feature-agnostic: it may compose
+  other shared hooks but may **not** import a `feature` or a feature `hook`. Containers pull
+  it in like any other hook. Reach for it only when a second consumer actually exists — a
+  one-feature hook stays in that feature.
 
 ## Configuration
 

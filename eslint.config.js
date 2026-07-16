@@ -87,6 +87,10 @@ export default tseslint.config(
         { type: 'component', pattern: 'src/components', partialMatch: false },
         { type: 'component', pattern: 'src/features/*/components', partialMatch: false },
         { type: 'hook', pattern: 'src/features/*/hooks', partialMatch: false },
+        // Cross-feature data hooks: the same job as `hook`, but shared by more than
+        // one feature. Lives outside src/features so it belongs to no single one.
+        // NOT src/hooks — that is the ui-hook layer (shadcn) and cannot touch data.
+        { type: 'shared-hook', pattern: 'src/shared/hooks', partialMatch: false },
         { type: 'feature', pattern: 'src/features/*', partialMatch: false },
       ],
     },
@@ -115,6 +119,7 @@ export default tseslint.config(
               'component',
               'ui',
               'hook',
+              'shared-hook',
               'store',
               'lib',
               'types',
@@ -126,6 +131,7 @@ export default tseslint.config(
             layer('feature', [
               'feature',
               'hook',
+              'shared-hook',
               'store',
               'component',
               'ui',
@@ -135,7 +141,12 @@ export default tseslint.config(
             ]),
 
             // Query/mutation hooks: the ONLY bridge from the UI to the data layer.
-            layer('hook', ['api', 'store', 'lib', 'types', 'config']),
+            // May build on shared hooks; may NOT import another feature's hook.
+            layer('hook', ['api', 'store', 'shared-hook', 'lib', 'types', 'config']),
+
+            // Cross-feature data hooks. Same reach as `hook`, and may compose each
+            // other. Feature-agnostic, so it must not import `feature` or `hook`.
+            layer('shared-hook', ['api', 'store', 'shared-hook', 'lib', 'types', 'config']),
 
             // Presentational. Props in, callbacks out. No data access. Ever.
             layer('component', ['component', 'ui', 'ui-hook', 'lib', 'types']),
@@ -158,6 +169,7 @@ export default tseslint.config(
               'app',
               'feature',
               'hook',
+              'shared-hook',
               'component',
               'ui',
               'api',

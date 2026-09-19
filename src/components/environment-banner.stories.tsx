@@ -12,14 +12,18 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Development: Story = {
-  args: { environment: 'development' },
+  args: { environment: 'development', enableMocking: true },
+}
+
+export const DevelopmentAgainstRealBackend: Story = {
+  args: { environment: 'development', enableMocking: false },
 }
 
 export const Staging: Story = {
-  args: { environment: 'staging' },
+  args: { environment: 'staging', enableMocking: false },
 }
 
 /** Production renders nothing at all — the canvas below is intentionally empty. */
 export const Production: Story = {
-  args: { environment: 'production' },
+  args: { environment: 'production', enableMocking: false },
 }

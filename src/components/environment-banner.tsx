@@ -3,15 +3,14 @@ import { cn } from '@/lib/utils'
 export interface EnvironmentBannerProps {
   /** Which deployment this is. Production renders nothing. */
   environment: 'development' | 'staging' | 'production'
+  /** Whether the app is actually serving MSW fixtures instead of a real backend. */
+  enableMocking: boolean
   className?: string
 }
 
-const LABELS = {
-  development: {
-    text: 'Development — data is mocked',
-    tone: 'bg-secondary text-secondary-foreground',
-  },
-  staging: { text: 'Staging — not production data', tone: 'bg-destructive/15 text-destructive' },
+const TONES = {
+  development: 'bg-secondary text-secondary-foreground',
+  staging: 'bg-destructive/15 text-destructive',
 } as const
 
 /**
@@ -21,13 +20,20 @@ const LABELS = {
  * are NOT in production, so nobody demos staging to a customer or files a bug
  * against fixture data.
  *
- * Presentational: it takes the environment as a prop and has no idea that a
- * `config.json` exists. `AppLayout` reads the config and passes it down.
+ * Presentational: it takes the environment and mocking state as props and has
+ * no idea that a `config.json` exists. `AppLayout` reads the config and passes
+ * both down.
  */
-export function EnvironmentBanner({ environment, className }: EnvironmentBannerProps) {
+export function EnvironmentBanner({
+  environment,
+  enableMocking,
+  className,
+}: EnvironmentBannerProps) {
   if (environment === 'production') return null
 
-  const { text, tone } = LABELS[environment]
+  const label = environment === 'development' ? 'Development' : 'Staging'
+  const text = enableMocking ? `${label} — data is mocked` : `${label} — not production data`
+  const tone = TONES[environment]
 
   return (
     <div
